@@ -1,2 +1,2 @@
-my_repo:
-  git_clone_url: "git@github.com:user/my_repo.git"
+github2cf:
+  git_clone_url: "git@github.com:LeanMeanFightingMachine/github2cf.git"

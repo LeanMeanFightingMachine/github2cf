@@ -34,10 +34,10 @@ require "colorize"
 
 REPOSITORY_FILE = File.dirname(__FILE__) + '/github_repos.yml'
   
-cfconnection = CloudFiles::Connection.new(
+$cfconnection = CloudFiles::Connection.new(
   :username => CLOUDFILES_USERNAME,
-  :api_key => CLOUDFILES_API_KEY,
-  :auth_url => CloudFiles::AUTH_UK # Remove this if you are outside of the UK
+  :api_key => CLOUDFILES_API_KEY
+  #,:auth_url => CloudFiles::AUTH_UK # Remove this if you are outside of the UK
 )
 
 def  clone_and_upload_to_cloudfiles(options)
@@ -45,11 +45,10 @@ def  clone_and_upload_to_cloudfiles(options)
 	 clone_command = "cd #{CLOUDFILES_CONTAINER} && git clone --bare #{options[:clone_url]} #{options[:name]}"
    puts clone_command.yellow
    system(clone_command)
-	 puts "\n Compressing #{options[:name]} ".green
+	 puts "Compressing #{options[:name]} ".green
 	 system("cd #{CLOUDFILES_CONTAINER} && tar czf #{compressed_filename(options[:name])} #{options[:name]}")
 	 
 	 upload_to_cloudfiles(compressed_filename(options[:name]))
-	 
  end
  
  def compressed_filename(str)
@@ -61,7 +60,7 @@ def  clone_and_upload_to_cloudfiles(options)
 		puts "** Uploading #{filename} to Cloudfiles".green
 		path = File.join(CLOUDFILES_CONTAINER, filename)
 		#S3Object.store(filename, File.read(path), cloudfilescontainer)
-		container = cfconnection.container(cloudfilescontainer)
+		container = $cfconnection.container(cloudfilescontainer)
 		object = container.create_object(filename, false)
     object.write(File.read(path));
     
@@ -87,15 +86,35 @@ end
 
 def ensure_container_exists
   begin
-    raise "No such container" if !cfconnection.container_exists?(cloudfilescontainer);
+    puts "Checking container exists..."
+    raise "No such container" if !$cfconnection.container_exists?(cloudfilescontainer)
   rescue
     puts "Container '#{cloudfilescontainer}' not found."
     puts "Creating Container '#{cloudfilescontainer}'. "
 
     begin 
-      cfconnection.create_container(cloudfilescontainer)
+      $cfconnection.create_container(cloudfilescontainer)
       # make sure it's private!
       puts "Created Container '#{cloudfilescontainer}'. "
+    rescue Exception => e
+      puts e.message
+    end
+  end
+end
+
+def ensure_container_private
+  begin
+    puts "Checking container is private..."
+    container = $cfconnection.container(cloudfilescontainer)
+    raise "Container isn't private" if container.public?
+  rescue
+    puts "Container '#{cloudfilescontainer}' isn't private."
+    puts "Setting container '#{cloudfilescontainer}' as private. "
+
+    begin 
+      container.make_private
+      # make sure it's private!
+      puts "Set container '#{cloudfilescontainer}' as private. "
     rescue Exception => e
       puts e.message
     end
@@ -141,9 +160,10 @@ begin
 	# create temp dir
 	Dir.mkdir(CLOUDFILES_CONTAINER) rescue nil
 	ensure_container_exists
+	ensure_container_private
 	backup_repos
 ensure	
 	# remove temp dir
-	delete_dir_and_sub_dir(CLOUDFILES_CONTAINER)
+	#delete_dir_and_sub_dir(CLOUDFILES_CONTAINER)
 end
 
