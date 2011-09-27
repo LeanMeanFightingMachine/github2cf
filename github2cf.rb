@@ -15,11 +15,11 @@
 
 # Cloudfiles credentials
 
-CLOUDFILES_USERNAME = "TEST"
-CLOUDFILES_API_KEY = "TEST"
+CLOUDFILES_USERNAME = "TEST2"
+CLOUDFILES_API_KEY = "TEST2"
 
 # Cloudfiles container name to put dumps
-CLOUDFILES_CONTAINER = "TEST"
+CLOUDFILES_CONTAINER = "TEST2"
 
 
 #############################################################
