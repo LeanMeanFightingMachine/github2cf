@@ -1,65 +1,54 @@
-#!/usr/bin/ruby
+#!/usr/bin/env ruby
 
 #############################################################
 # Requirements:
-#				ruby + aws-s3 gem + colorize gem
+#				ruby + cloudfiles gem + colorize gem
 #				git
 #
-# Author: Akhil Bansal (http://webonrails.com)
+# Rackspace version by: Steve Mckellar (http://www.leanmeanfightingmachine.co.uk)
+# Based on github2s3 by: Akhil Bansal (http://webonrails.com)
 #############################################################
 
 
 #############################################################
-# CONFIGURATION SETTINGS: Please change your S3 credentials
+# CONFIGURATION SETTINGS: Please change your Rackspace cloud credentials
 
-# AWS S3 credentials
+# Cloudfiles credentials
 
+CLOUDFILES_USERNAME = "TEST"
+CLOUDFILES_API_KEY = "TEST"
 
-AWS_ACCESS_KEY_ID = "ACCESS_KEY"
-AWS_SECRET_ACCESS_KEY = "SECRET_KEY"
-
-# S3 bucket name to put dumps
-S3_BUCKET = "github-backup"
-
-USE_SSL = true
-
+# Cloudfiles container name to put dumps
+CLOUDFILES_CONTAINER = "TEST"
 
 
 #############################################################
 # PLEASE DO NOT EDIT BELOW THIS LINE
 #############################################################
 
-
 require 'rubygems'
 require 'fileutils'
-require  'aws/s3'
+require 'cloudfiles'
 require 'yaml'
 require "colorize"
 
 REPOSITORY_FILE = File.dirname(__FILE__) + '/github_repos.yml'
+  
+cfconnection = CloudFiles::Connection.new(
+  :username => CLOUDFILES_USERNAME,
+  :api_key => CLOUDFILES_API_KEY,
+  :auth_url => CloudFiles::AUTH_UK # Remove this if you are outside of the UK
+)
 
-AWS::S3::Base.establish_connection!(
-    :access_key_id     => AWS_ACCESS_KEY_ID,
-    :secret_access_key => AWS_SECRET_ACCESS_KEY,
-    :use_ssl => USE_SSL
-    
-  )
-
-class Bucket < AWS::S3::Bucket
-end
-
-class  S3Object < AWS::S3::S3Object
-end
-
-def  clone_and_upload_to_s3(options)
+def  clone_and_upload_to_cloudfiles(options)
 	 puts "\n\nChecking out #{options[:name]} ...".green
-	 clone_command = "cd #{S3_BUCKET} && git clone --bare #{options[:clone_url]} #{options[:name]}"
+	 clone_command = "cd #{CLOUDFILES_CONTAINER} && git clone --bare #{options[:clone_url]} #{options[:name]}"
    puts clone_command.yellow
    system(clone_command)
 	 puts "\n Compressing #{options[:name]} ".green
-	 system("cd #{S3_BUCKET} && tar czf #{compressed_filename(options[:name])} #{options[:name]}")
+	 system("cd #{CLOUDFILES_CONTAINER} && tar czf #{compressed_filename(options[:name])} #{options[:name]}")
 	 
-	 upload_to_s3(compressed_filename(options[:name]))
+	 upload_to_cloudfiles(compressed_filename(options[:name]))
 	 
  end
  
@@ -67,13 +56,17 @@ def  clone_and_upload_to_s3(options)
 	 str+".tar.gz"
  end	 
  
- def upload_to_s3(filename)
+ def upload_to_cloudfiles(filename)
 	 begin
-		puts "** Uploading #{filename} to S3".green
-		path = File.join(S3_BUCKET, filename)
-		S3Object.store(filename, File.read(path), s3bucket)
+		puts "** Uploading #{filename} to Cloudfiles".green
+		path = File.join(CLOUDFILES_CONTAINER, filename)
+		#S3Object.store(filename, File.read(path), cloudfilescontainer)
+		container = cfconnection.container(cloudfilescontainer)
+		object = container.create_object(filename, false)
+    object.write(File.read(path));
+    
 	 rescue Exception => e
-		puts "Could not upload #{filename} to S3".red
+		puts "Could not upload #{filename} to Cloudfiles".red
 		puts e.message.red
 	 end
  end
@@ -92,32 +85,32 @@ def delete_dir_and_sub_dir(dir)
   Dir.delete(dir)
 end
 
-def ensure_bucket_exists
-	 begin
-		bucket = Bucket.find(s3bucket)
-	 rescue AWS::S3::NoSuchBucket => e
-		puts "Bucket '#{s3bucket}' not found."
-		puts "Creating Bucket '#{s3bucket}'. "
-		
-		begin 
-			Bucket.create(s3bucket)
-			puts "Created Bucket '#{s3bucket}'. "
-		rescue Exception => e
-			puts e.message
-		end
-	 end
- 
- end
+def ensure_container_exists
+  begin
+    raise "No such container" if !cfconnection.container_exists?(cloudfilescontainer);
+  rescue
+    puts "Container '#{cloudfilescontainer}' not found."
+    puts "Creating Container '#{cloudfilescontainer}'. "
 
-def s3bucket
-	s3bucket = S3_BUCKET 
+    begin 
+      cfconnection.create_container(cloudfilescontainer)
+      # make sure it's private!
+      puts "Created Container '#{cloudfilescontainer}'. "
+    rescue Exception => e
+      puts e.message
+    end
+  end
+end
+
+def cloudfilescontainer
+	cloudfilescontainer = CLOUDFILES_CONTAINER
 end
 
 
 def backup_repos_form_yaml 
     if File.exist?(REPOSITORY_FILE)
       repos = YAML.load_file(REPOSITORY_FILE)
-      repos.each{|repo| clone_and_upload_to_s3(:name => repo[0], :clone_url => repo[1]['git_clone_url']) }
+      repos.each{|repo| clone_and_upload_to_cloudfiles(:name => repo[0], :clone_url => repo[1]['git_clone_url']) }
     else
 	    puts "Repository YAML file(./github_repos.yml) file not found".red
     end
@@ -127,7 +120,7 @@ def back_repos_from_arguments
 	ARGV.each do |arg|
 		begin
 			name = arg.split('/').last
-			clone_and_upload_to_s3(:name => name, :clone_url => arg) 
+			clone_and_upload_to_cloudfiles(:name => name, :clone_url => arg) 
 		rescue Exception => e
 			puts e.message.red
 		end
@@ -146,11 +139,11 @@ end
 
 begin
 	# create temp dir
-	Dir.mkdir(S3_BUCKET) rescue nil
-	ensure_bucket_exists
+	Dir.mkdir(CLOUDFILES_CONTAINER) rescue nil
+	ensure_container_exists
 	backup_repos
 ensure	
 	# remove temp dir
-	delete_dir_and_sub_dir(S3_BUCKET)
+	delete_dir_and_sub_dir(CLOUDFILES_CONTAINER)
 end
 

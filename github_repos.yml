@@ -1,5 +1,2 @@
-state_select:
-  git_clone_url: "git@github.com:bansalakhil/state_select.git"
-
-another_repo:
-  git_clone_url: "git@github.com:bansalakhil/another_repository.git"
+my_repo:
+  git_clone_url: "git@github.com:user/my_repo.git"
