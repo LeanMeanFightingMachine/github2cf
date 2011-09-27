@@ -37,7 +37,7 @@ REPOSITORY_FILE = File.dirname(__FILE__) + '/github_repos.yml'
 $cfconnection = CloudFiles::Connection.new(
   :username => CLOUDFILES_USERNAME,
   :api_key => CLOUDFILES_API_KEY
-  #,:auth_url => CloudFiles::AUTH_UK # Remove this if you are outside of the UK
+  #,:auth_url => CloudFiles::AUTH_UK # Add this line if you are using the UK service
 )
 
 def  clone_and_upload_to_cloudfiles(options)
@@ -164,6 +164,6 @@ begin
 	backup_repos
 ensure	
 	# remove temp dir
-	#delete_dir_and_sub_dir(CLOUDFILES_CONTAINER)
+	delete_dir_and_sub_dir(CLOUDFILES_CONTAINER)
 end
 
