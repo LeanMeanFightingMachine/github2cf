@@ -2,10 +2,10 @@
 
 #############################################################
 # Requirements:
-#				ruby + cloudfiles gem + colorize gem
+#				ruby + cloudfiles gem + yaml gem + colorize gem
 #				git
 #
-# Rackspace version by: Steve Mckellar (http://www.leanmeanfightingmachine.co.uk)
+# By: Steve Mckellar (http://www.leanmeanfightingmachine.co.uk)
 # Based on github2s3 by: Akhil Bansal (http://webonrails.com)
 #############################################################
 
@@ -44,10 +44,20 @@ def  clone_and_upload_to_cloudfiles(options)
 	clone_command = "cd #{CLOUDFILES_CONTAINER} && git clone --bare git@github.com:#{options[:clone_url]} #{options[:name]}"
 	puts clone_command.yellow
 	system(clone_command)
-	puts "Compressing #{options[:name]} ".green
-	system("cd #{CLOUDFILES_CONTAINER} && tar czf #{compressed_filename(options[:name])} #{options[:name]}")
+	
+	if File.exists?("#{CLOUDFILES_CONTAINER}/#{options[:name]}")
+		puts "Compressing #{options[:name]} ".green
+		system("cd #{CLOUDFILES_CONTAINER} && tar czf #{compressed_filename(options[:name])} #{options[:name]}")
 
-	upload_to_cloudfiles(compressed_filename(options[:name]))
+		upload_to_cloudfiles(compressed_filename(options[:name]))
+		
+		puts "-------------------------------------------------------------------------------------".light_red
+	  puts "To delete the github hosted repository, please go to:".light_red
+	  puts "https://github.com/#{account}/#{shortname}/admin".underline.light_red
+	  puts "-------------------------------------------------------------------------------------".light_red
+	else
+		puts "!!! CLONE FAILED: Repository (probably) does not exist".red
+	end
 end
 
 def compressed_filename(str)
@@ -124,7 +134,7 @@ def cloudfilescontainer
 end
 
 
-def backup_repos_form_yaml 
+def backup_repos_from_yaml 
 	if File.exist?(REPOSITORY_FILE)
 		repos = YAML.load_file(REPOSITORY_FILE)
 		repos.each{ |repo|
@@ -151,7 +161,7 @@ def backup_repos
 	if ARGV.size > 0
 		back_repos_from_arguments
 	else
-		backup_repos_form_yaml
+		backup_repos_from_yaml
 	end
 end	
 

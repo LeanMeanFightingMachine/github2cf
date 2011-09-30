@@ -2,10 +2,10 @@
 
 #############################################################
 # Requirements:
-#				ruby + cloudfiles gem + colorize gem
+#				ruby + cloudfiles gem + yaml gem  + colorize gem
 #				git
 #
-# Rackspace version by: Steve Mckellar (http://www.leanmeanfightingmachine.co.uk)
+# By: Steve Mckellar (http://www.leanmeanfightingmachine.co.uk)
 # Based on github2s3 by: Akhil Bansal (http://webonrails.com)
 #############################################################
 
