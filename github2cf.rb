@@ -52,9 +52,9 @@ def  clone_and_upload_to_cloudfiles(options)
 		upload_to_cloudfiles(compressed_filename(options[:name]))
 		
 		puts "-------------------------------------------------------------------------------------".light_red
-	  puts "To delete the github hosted repository, please go to:".light_red
-	  puts "https://github.com/#{account}/#{shortname}/admin".underline.light_red
-	  puts "-------------------------------------------------------------------------------------".light_red
+		puts "To delete the github hosted repository, please go to:".light_red
+		puts "https://github.com/#{account}/#{shortname}/admin".underline.light_red
+		puts "-------------------------------------------------------------------------------------".light_red
 	else
 		puts "!!! CLONE FAILED: Repository (probably) does not exist".red
 	end

@@ -11,15 +11,15 @@ Instructions
 
 ###Archive
 
-1) Make sure that you've put your details into the configuration at the top of the script.
-2) $ ./github2cf.rb [Organisation/Username]/[Repo name].git
-3) Sit back and relax!
+1. Make sure that you've put your details into the configuration at the top of the script.
+2. $ ./github2cf.rb [Organisation/Username]/[Repo name].git
+3. Sit back and relax!
 
 ###Restore
 
-1) Make sure that you've put your details into the configuration at the top of the script.
-2) $ ./cf2github.rb [Organisation/Username]/[Repo name].git
-3) Sit back and relax! 
+1. Make sure that you've put your details into the configuration at the top of the script.
+2. $ ./cf2github.rb [Organisation/Username]/[Repo name].git
+3. Sit back and relax! 
 
 Requirements
 ------------
