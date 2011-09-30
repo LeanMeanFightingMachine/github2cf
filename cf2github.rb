@@ -66,7 +66,7 @@ def create_repo_and_push(clone_url)
 	http.verify_mode = OpenSSL::SSL::VERIFY_NONE
 
 	request = Net::HTTP::Post.new("/api/v2/json/repos/create")
-	request.set_form_data({'name' => "#{account}/#{name}"}, ';')
+	request.set_form_data({'name' => "#{account}/#{name}", 'public' => "false"}, ';')
 	request.basic_auth(GITHUB_USERNAME,GITHUB_PASSWORD)
 	
 	http.request(request) {|response|
